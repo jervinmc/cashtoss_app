@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
   String dropdownValue = 'Medication';
-
+  bool _load = false;
   var LangList = ["kor", "eng", "deu", "chi_sim"];
   var selectList = ["eng", "kor"];
   String path = "";
@@ -184,14 +184,18 @@ void notify(DialogType type , title, desc){
 
 String _textMessage='';
 void addReceipt() async {
-
+  setState(() {
+    _load = true;
+  });
+    final prefs = await SharedPreferences.getInstance();
+    int _id = prefs.getInt("_id");
     var params={
-      "id":1,
+      "id":_id,
       "category_name":dropdownValue,
       "vendor_name":_vendorName.text,
       "total":_totalAmount.text
     };
-    final response = await http.post(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"},body:json.encode(params));
+    final response = await http.post(Uri.parse(BASE_URL+'/'+'1'),headers: {"Content-Type": "application/json"},body:json.encode(params));
     final data = json.decode(response.body);
     print(data['id']);
     uploadImage(data['id']);
@@ -200,8 +204,9 @@ void addReceipt() async {
       dropdownValue='Others';
       _vendorName.text='';
       _totalAmount.text='';
+      _load = false;
     });
-
+    
     if("exceed"==data['status']){
        AwesomeDialog(
             context: context,
@@ -213,9 +218,12 @@ void addReceipt() async {
             )..show();
     }
     
-
+ 
 }
   void _ocr(url) async {
+     setState(() {
+    _load = true;
+  });
     if (selectList.length <= 0) {
       print("Please select language");
       return;
@@ -263,6 +271,7 @@ void addReceipt() async {
     final data = json.decode(response.body);
     setState(() {
       dropdownValue=data['data'];
+      _load = false;
     });
   }
   void convertMessage() async{
@@ -273,19 +282,17 @@ void addReceipt() async {
     text.forEach((item) {
       if(getVal){
         if(item.toLowerCase().contains('total')){
-        var val=text[text.indexOf(item)];
-        print(val.runtimeType==double);
-        print(val);
-        var _splittedAmount=val.split(' ');
-        _totalAmount.text=_splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
+        var val=text[text.indexOf(item)+1];
+        var _splittedAmount=val;
+        _totalAmount.text=_splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
         print(_totalAmount.text.replaceAll("[^\\d.]", ""));
         getVal=false;
       } 
       else if(item.toLowerCase().contains('amount')){
-        var val=text[text.indexOf(item)];
-        var _splittedAmount=val.split(' ');
+        var val=text[text.indexOf(item)+1];
+        var _splittedAmount=val;
         print(val);
-        _totalAmount.text=_splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
+        _totalAmount.text=_splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
         print(_totalAmount.text.replaceAll("[^\\d.]", ""));
          getVal=false;
       }
@@ -296,6 +303,7 @@ void addReceipt() async {
     setState(() {
       dropdownValue=data['data'];
       _addIndex=1;
+     
     });
   }
   
@@ -378,7 +386,18 @@ void addReceipt() async {
                     animType: AnimType.BOTTOMSLIDE,
                     title: "Are you sure you want to logout ?",
                     btnOkOnPress: (){
-                      runApp(Login());
+                      Navigator.pop(context);
+                      Navigator.push(
+                  context,
+                  PageTransition(
+                    curve: Curves.linear,
+                    type: PageTransitionType.topToBottom,
+                    child: Login(),
+                  ),
+                );
+                        
+                      // runApp(());
+                    
                     },
                     btnCancelOnPress: (){
 
@@ -570,7 +589,13 @@ void addReceipt() async {
                  )
                ],
              )
-           )
+           ),
+           _load ? Container(
+                    color: Colors.white10,
+                    width: 70.0,
+                    height: 70.0,
+                    child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
+                  ) : Text('')
           ],
         ), 
             ), 
@@ -684,7 +709,13 @@ void addReceipt() async {
                       ),
                     ),
                   )
-                 )
+                 ),
+                 _load ? Container(
+                    color: Colors.white10,
+                    width: 70.0,
+                    height: 70.0,
+                    child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
+                  ) : Text('')
                ],
              )
            )

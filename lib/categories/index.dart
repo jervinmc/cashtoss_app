@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:e_expense/details/index.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class receiptList extends StatefulWidget {
   String _category='';
   receiptList(this._category);
@@ -13,7 +14,8 @@ class receiptList extends StatefulWidget {
 } 
 
 class _receiptListState extends State<receiptList> {
-  
+  bool _load = true;
+  int _id = 0;
   String _category='';
   static String BASE_URL = ''+Global.url+'/categories';
   
@@ -26,25 +28,51 @@ class _receiptListState extends State<receiptList> {
       "name":"name1"
     }
   ];
-  
+
+  void getPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      
+      print(_id);
+    });
+  }
+
   List data;
   
   Future<String> getData() async {
-   final response = await http.get(Uri.parse(BASE_URL+'/'+_category),headers: {"Content-Type": "application/json"});
+  final prefs = await SharedPreferences.getInstance();
+  _id = prefs.getInt("_id");
+   final response = await http.get(Uri.parse(BASE_URL+'/'+_category+'/'+_id.toString()),headers: {"Content-Type": "application/json"});
 
   this.setState(() {
-    data=json.decode(response.body);
+   
+   try{
+      _load = false;
+       data=json.decode(response.body);
+   }
+   finally{
+       _load = false;
+   }
     });
   }
     @override
   void initState(){
+    this.getPref();
     this.getData();
+  
   }
 
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: AppBar(backgroundColor:Colors.purple,title: Text(_category),),
-        body: new ListView.builder(
+        body: _load ? Center(
+          child: Container(
+                            color: Colors.white10,
+                            width: 70.0,
+                            height: 70.0,
+                            child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
+                          ),
+        ) : new ListView.builder(
         itemCount: data == null ? 0 : data.length,
         itemBuilder: (BuildContext context, int index){
           return new ListTile(

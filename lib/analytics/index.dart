@@ -5,42 +5,56 @@ import 'package:e_expense/config/global.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class analytics extends StatefulWidget {
 
   @override
   _analyticsState createState() => _analyticsState();
 }
+  bool _load = true;
   int _totalSetAmount=0;
   bool isEdit=false;
   double _percent = 0;
   double _percentLabel=0;
   int _currentAmount=0;
+  int _id = 0;
 class _analyticsState extends State<analytics> {
   static String BASE_URL = ''+Global.url+'/settings';
   static String BASE_URL_RECEIPT = ''+Global.url+'/receipt';
     Future<String> getData() async {
+      final prefs = await SharedPreferences.getInstance();
+    int _id = prefs.getInt("_id");
       print("okay");
-   final response = await http.get(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"});
+
+   final response = await http.get(Uri.parse(BASE_URL+'/'+_id.toString()),headers: {"Content-Type": "application/json"});
   var data=json.decode(response.body);
   _totalSetAmount = data;
   setState(() {
   });
   }
    Future<String> totalReceipts() async {
-     
-   final response = await http.get(Uri.parse(BASE_URL_RECEIPT),headers: {"Content-Type": "application/json"});
+  final prefs = await SharedPreferences.getInstance();
+    int _id = prefs.getInt("_id");
+   final response = await http.get(Uri.parse(BASE_URL_RECEIPT+'/'+_id.toString()),headers: {"Content-Type": "application/json"});
    var data=json.decode(response.body);
   setState(() {
-    _currentAmount=data['total'];
+  
+    _load=false;
     print(data);
     
     dataMap={"Groceries":data['Groceries'],"Medication":data['Medication'],"Others":data['Others'],"Food":data['Food']};
-    if(data['total']/_totalSetAmount>1.0){
-      _percent = 1.0;
+    if(data['total']!=null){
+          _currentAmount=data['total'];
+        if(data['total']/_totalSetAmount>1.0){
+          _percent = 1.0;
+        }
+        else{
+          _percent=_currentAmount/_totalSetAmount;
+          _percentLabel=_percent*100;
+        }
     }
     else{
-      _percent=_currentAmount/_totalSetAmount;
-      _percentLabel=_percent*100;
+      _percent = 0;
     }
   });
   
@@ -57,10 +71,12 @@ class _analyticsState extends State<analytics> {
     "Others": 2,
   };
     void saveAmount() async {
-   final response = await http.post(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"},body: json.encode({"totalAmount":_totalAmount.text}));
+     final prefs = await SharedPreferences.getInstance();
+    int _id = prefs.getInt("_id");
+   final response = await http.post(Uri.parse(BASE_URL+'/'+_id.toString()),headers: {"Content-Type": "application/json"},body: json.encode({"totalAmount":_totalAmount.text}));
   }
-  
    void initState(){
+     
     this.getData();
     this.totalReceipts();
   }
@@ -71,7 +87,14 @@ class _analyticsState extends State<analytics> {
         backgroundColor: Colors.purple,
         title: Text('Reports'),
       ),
-      body: Container(
+    body:   _load ?  Center(
+      child: Container(
+            color: Colors.white10,
+            width: 70.0,
+            height: 70.0,
+            child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
+          ),
+    ) : Container(
         padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
         child: Column(
         children: [
@@ -140,20 +163,20 @@ class _analyticsState extends State<analytics> {
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color:Colors.black45 , width: 1.0),
                     ),
-                    hintText: 'Enter Vendor',
+                    hintText: 'Enter Amount',
                 ),
             ):textSize("", 0.0),
               ),
-            Container(
-              padding: EdgeInsets.only(top: 25),
-              child: new CircularPercentIndicator(
-                  radius: 150.0,
-                  lineWidth: 20.0,
-                  percent: _percent,
-                  center: new Text(_percentLabel.round().toString()),
-                  progressColor: Colors.green,
-                ),
-            )
+            // Container(
+            //   padding: EdgeInsets.only(top: 25),
+            //   child: new CircularPercentIndicator(
+            //       radius: 150.0,
+            //       lineWidth: 20.0,
+            //       percent: _percent,
+            //       center: new Text(_percentLabel.round().toString()),
+            //       progressColor: Colors.green,
+            //     ),
+            // )
         ],
       ),
       )

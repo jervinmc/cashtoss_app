@@ -70,13 +70,10 @@ class _SignUpState extends State<SignUp> {
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-      body: ListView(
-        children: [
-          Column(
+      body:  Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(padding: EdgeInsets.only(top:50)),
               Card(
                 elevation: 5,
                 shape: RoundedRectangleBorder(
@@ -127,6 +124,7 @@ class _SignUpState extends State<SignUp> {
                           width: 250,
                           child: ElevatedButton(
                             style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(Colors.purple),
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(18.0),
@@ -178,8 +176,6 @@ class _SignUpState extends State<SignUp> {
               
             ],
           )
-        ],
-      ),
     ),
     );
 }

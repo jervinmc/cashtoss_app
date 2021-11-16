@@ -51,7 +51,16 @@ class _LoginState extends State<Login> {
         setState(() {
           _load=false;
         });
-        runApp(Home());
+         Navigator.pop(context);
+                      Navigator.push(
+                  context,
+                  PageTransition(
+                    curve: Curves.linear,
+                    type: PageTransitionType.topToBottom,
+                    child: Home(),
+                  ),
+                );
+        // runApp(Home());
       }
       else{
         notify(DialogType.ERROR, 'Wrong Credentials', "Please try again.");
@@ -67,13 +76,10 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-      body: ListView(
-        children: [
-          Column(
+      body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(padding: EdgeInsets.only(top: 30)),
               Card(
                 elevation: 5,
                 shape: RoundedRectangleBorder(
@@ -92,8 +98,14 @@ class _LoginState extends State<Login> {
                           child: TextField(
                             controller: _email,
                             decoration: InputDecoration(
-                                contentPadding: EdgeInsets.all(8.0),
+                                contentPadding: EdgeInsets.all(8.0),enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.grey, width: 1.5),
+                                       borderRadius: BorderRadius.circular(20.0),
+                                  ),
                                 border: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                  color: Colors.purple, 
+                                    width: 5.0),
                                   borderRadius: BorderRadius.circular(20.0),
                                 ),
                                 filled: true,
@@ -109,7 +121,11 @@ class _LoginState extends State<Login> {
                                     obscureText: true,
                                     controller: _password,
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(8.0),
+                                            contentPadding: EdgeInsets.all(8.0),enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.grey, width: 1.5),
+                                            borderRadius: BorderRadius.circular(20.0),
+                                        ),
+                                      
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(20.0),
                                         ),
@@ -124,7 +140,7 @@ class _LoginState extends State<Login> {
                           width: 250,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              
+                                backgroundColor: MaterialStateProperty.all<Color>(Colors.purple),
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(18.0),
@@ -176,8 +192,6 @@ class _LoginState extends State<Login> {
               
             ],
           )
-        ],
-      ),
     ),
     );
 }
