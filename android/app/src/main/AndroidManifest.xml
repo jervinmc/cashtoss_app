@@ -5,8 +5,12 @@
         <uses-permission android:name="android.permission.CAMERA" />
         <uses-permission android:name="android.permission.RECEIVE_SMS"/>
    <application
-        android:label="e_expense"
+        android:label="Cashtoss"
         android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
           <activity android:name="io.github.edufolly.fluttermobilevision.ocr.OcrCaptureActivity" />
           <receiver android:name="com.shounakmulay.telephony.sms.IncomingSmsReceiver"
             android:permission="android.permission.BROADCAST_SMS" android:exported="true">

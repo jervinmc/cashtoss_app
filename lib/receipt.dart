@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:e_expense/categories/index.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:page_transition/page_transition.dart';
 
 class receipt extends StatefulWidget {
@@ -30,14 +32,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.amber[800].withAlpha(30),
                     onTap: () {
-                        Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Medication')
-                  ),
-                );
+                     Get.toNamed('/receiptList',arguments: 'Medication');
                     },
                     child: 
                 Column(
@@ -56,14 +51,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Store')
-                  ),
-                );
+                   Get.toNamed('/receiptList',arguments: 'Store');
                     },
                     child: 
                 Column(
@@ -82,14 +70,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Education')
-                  ),
-                );
+                    Get.toNamed('/receiptList',arguments: 'Education');
                     },
                     child: 
                 Column(
@@ -108,14 +89,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Food')
-                  ),
-                );
+                      Get.toNamed('/receiptList',arguments: 'Food');
                     },
                     child: 
                 Column(
@@ -134,14 +108,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Utilities')
-                  ),
-                );
+                     Get.toNamed('/receiptList',arguments: 'Utilities');
                     },
                     child: 
                 Column(
@@ -160,14 +127,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Transportation')
-                  ),
-                );
+                      Get.toNamed('/receiptList',arguments: 'Transportation');
                     },
                     child: 
                 Column(
@@ -186,14 +146,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receiptList('Others')
-                  ),
-                );
+                      Get.toNamed('/receiptList',arguments: 'Others');
                     },
                     child: 
                 Column(

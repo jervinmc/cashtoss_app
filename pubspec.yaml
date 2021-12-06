@@ -42,6 +42,9 @@ dependencies:
   awesome_dialog: ^2.1.1
   percent_indicator: ^3.4.0
   shared_preferences: any
+  image_capture_field: ^0.2.4
+  image_cropper: ^1.4.1
+  get: ^4.3.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -61,6 +64,7 @@ flutter:
   assets:
   - assets/tessdata/
   - assets/images/mainlogo.png
+  - assets/images/cashtoss.png
   - assets/images/home_pic.jpeg
   - assets/tessdata_config.json
   #   - images/a_dot_burr.jpeg

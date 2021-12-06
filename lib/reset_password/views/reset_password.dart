@@ -11,34 +11,18 @@ import 'package:e_expense/config/global.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:page_transition/page_transition.dart';
-import 'signup/index.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-class Login extends StatefulWidget {
-  const Login({ Key key }) : super(key: key);
+import 'package:e_expense/login.dart';
+
+class ResetPassword extends StatefulWidget {
+  const ResetPassword({ Key key }) : super(key: key);
 
   @override
-  _LoginState createState() => _LoginState();
+  _ResetPasswordState createState() => _ResetPasswordState();
 }
 
-class _LoginState extends State<Login> {
-  static String BASE_URL = ''+Global.url+'/login';
+class _ResetPasswordState extends State<ResetPassword> {
+  static String BASE_URL = ''+Global.url+'/reset_password';
   bool _load = false;
-  
-  void pageValidation()async {
-      final prefs = await SharedPreferences.getInstance();
-     print(prefs.getBool("isLoggedIn"));
-     
-     if(prefs.getBool("isLoggedIn")){
-        Navigator.pop(context);
-       Get.toNamed('/home');
-     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    pageValidation();
-  }
   void notify(DialogType type , title, desc){
       AwesomeDialog(
                 context: context,
@@ -46,47 +30,36 @@ class _LoginState extends State<Login> {
                 animType: AnimType.BOTTOMSLIDE,
                 title: title,
                 desc: desc,
-                btnOkOnPress: () {},
+                btnOkOnPress: () {
+                  if(DialogType.ERROR==type){
+                    
+                  }
+                  else{
+                    Get.back();
+                  }
+                },
                 )..show();
     }
-  void Login() async {
-    final prefs = await SharedPreferences.getInstance();
-      var params = {
+  void ResetPassword() async {
+   var params = {
         "email":_email.text,
-        "password":_password.text
       };
       setState(() {
         _load=true;
       });
       final response = await http.post(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"},body:json.encode(params));
-      String jsonsDataString = response.body.toString();
-      final _data = jsonDecode(jsonsDataString);
-      if(_data['status']==201){
-        prefs.setInt("_id",_data['id']);
-        prefs.setString("_email",_data['email']);
-        prefs.setBool("isLoggedIn",true);
-        setState(() {
-          _load=false;
-        });
-        Navigator.pop(context);
-       Get.toNamed('/home');
-        // runApp(Home());
-      }
-      else{
-        notify(DialogType.ERROR, 'Wrong Credentials', "Please try again.");
-       setState(() {
+      setState(() {
          _load=false;
-       });
-      }
-      
+      });
+      notify(DialogType.SUCCES, 'Successful !', 'You may now check your new password on your email account.');
+     
   }
   TextEditingController _email = new TextEditingController();
-  TextEditingController _password = new TextEditingController();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-      body: Column(
+      body:  Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -94,7 +67,7 @@ class _LoginState extends State<Login> {
                 elevation: 5,
                 shape: RoundedRectangleBorder(
                   side: BorderSide(color: Colors.white70, width: 1),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 margin: EdgeInsets.all(20.0),
                 child: Container(
@@ -107,14 +80,8 @@ class _LoginState extends State<Login> {
                           child: TextField(
                             controller: _email,
                             decoration: InputDecoration(
-                                contentPadding: EdgeInsets.all(8.0),enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.grey, width: 1.5),
-                                       borderRadius: BorderRadius.circular(20.0),
-                                  ),
+                              contentPadding: EdgeInsets.all(8.0),
                                 border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                  color: Colors.purple, 
-                                    width: 5.0),
                                   borderRadius: BorderRadius.circular(20.0),
                                 ),
                                 filled: true,
@@ -122,33 +89,6 @@ class _LoginState extends State<Login> {
                                 hintText: "Email",
                                 fillColor: Colors.white70),
                           )
-                        ),
-                        Container(
-                          height: 100,
-                          padding: EdgeInsets.only(top: 10),
-                          child: TextField(
-                                    obscureText: true,
-                                    controller: _password,
-                                    decoration: InputDecoration(
-                                            contentPadding: EdgeInsets.all(8.0),enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(color: Colors.grey, width: 1.5),
-                                            borderRadius: BorderRadius.circular(20.0),
-                                        ),
-                                      
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(20.0),
-                                        ),
-                                        filled: true,
-                                        hintStyle: TextStyle(color: Colors.grey[800]),
-                                        hintText: "Password",
-                                        fillColor: Colors.white70),
-                                  )
-                        ),
-                        InkWell(
-                          onTap: (){
-                            Get.toNamed('/resetPassword');
-                          },
-                          child: Text('Forgot Password?'),
                         ),
                         Container(
                           padding: EdgeInsets.only(top: 15),
@@ -160,9 +100,9 @@ class _LoginState extends State<Login> {
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(18.0),
                                         ))),
-                            child: Text('Login'),
+                            child: Text('Recover Password'),
                             onPressed: () {
-                            Login();
+                            ResetPassword();
                             },
                           ),
                         ),
@@ -170,9 +110,9 @@ class _LoginState extends State<Login> {
                           padding: EdgeInsets.only(top: 5),
                           width: 250,
                           child: ElevatedButton(
-                              child: Text('Sign up',style: TextStyle(color: Colors.black),),
+                              child: Text('Cancel',style: TextStyle(color: Colors.black),),
                             onPressed: () {
-                              Get.toNamed('/signup');
+                             Get.back();
                             },
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(

@@ -28,7 +28,11 @@ class _SignUpState extends State<SignUp> {
                 title: title,
                 desc: desc,
                 btnOkOnPress: () {
-                  Navigator.push(
+                  if(DialogType.ERROR==type){
+                    
+                  }
+                  else{
+                    Navigator.push(
                         context,
                         PageTransition(
                           curve: Curves.linear,
@@ -36,10 +40,16 @@ class _SignUpState extends State<SignUp> {
                           child: Login(),
                         ),
                       );
+                  }
                 },
                 )..show();
     }
   void SignUp() async {
+    if(_email.text==null || _password.text==null || _email.text=='' || _password.text=='') {
+        notify(DialogType.ERROR,'Field is required.','Please fill up the form.');
+        
+        return;
+    }
       var params = {
         "email":_email.text,
         "password":_password.text
@@ -57,7 +67,7 @@ class _SignUpState extends State<SignUp> {
         _password.text="";
       }
       else{
-        notify(DialogType.ERROR, 'Account is already exists.', "Please user other account.");
+        notify(DialogType.ERROR, 'Account is already exists.', "Please use other account.");
        setState(() {
          _load=false;
        });
@@ -85,8 +95,7 @@ class _SignUpState extends State<SignUp> {
                   padding: EdgeInsets.all(20),
                   child: Column(
                       children: <Widget>[
-                        Image.asset("assets/images/mainlogo.png",height: 100,),
-                        textSize('Register', 30),
+                        Image.asset("assets/images/cashtoss.png",height: 200,),
                         Container(
                           padding: EdgeInsets.only(top: 20),
                           child: TextField(

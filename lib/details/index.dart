@@ -14,9 +14,12 @@ ReceiptDetails(this._image,this._totalAmount,this._vendorName);
       child: Center(
         child: Column(
         children: [
-          textSize(_vendorName, 15.0),
+          textSize(_vendorName, 30.0),
           textSize(_totalAmount.toString(), 20.0),
           Image.network(_image,height: 400,)
+          // _image != 'https://cashtosspublic.s3.us-east-2.amazonaws.com/None' ? Image.network(_image,height: 400,) :
+          // Image.asset("assets/images/cashtoss.png",height: 400,)
+
         ],
       ),
       )

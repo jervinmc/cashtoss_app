@@ -2,6 +2,8 @@ import 'package:e_expense/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_vision/flutter_mobile_vision.dart';
 import 'package:e_expense/utils.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_tesseract_ocr/flutter_tesseract_ocr.dart';
 import 'dart:async';
@@ -39,9 +41,12 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:telephony/telephony.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'profile/index.dart';
+import 'package:image_cropper/image_cropper.dart';
+
 onBackgroundMessage(SmsMessage message) {
   debugPrint("onBackgroundMessage called");
 }
+
 class Home extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -68,53 +73,51 @@ class _MyHomePageState extends State<MyHomePage> {
   String _message = "";
   final telephony = Telephony.instance;
   String _ocrText = '';
-  int _selectedIndex=0;
+  int _selectedIndex = 0;
   String _ocrHocr = '';
   String _email = '';
-  TextEditingController _vendorName= new TextEditingController();
-  TextEditingController _categoryName= new TextEditingController();
-  TextEditingController _totalAmount= new TextEditingController();
+  TextEditingController _vendorName = new TextEditingController();
+  TextEditingController _categoryName = new TextEditingController();
+  TextEditingController _totalAmount = new TextEditingController();
   final List<Map<String, dynamic>> _items = [
-  {
-    'value': 'Medication',
-    'label': 'Medication',
-   
-  },
-  {
-    'value': 'Food',
-    'label': 'Food',
-  },
-  {
-    'value': 'Transportation',
-    'label': 'Transportation',
-
-  },
-   {
-    'value': 'Groceries',
-    'label': 'Groceries',
-  },
-   {
-    'value': 'Utilities',
-    'label': 'Utilities',
-  },
-  {
-    'value': 'Others',
-    'label': 'Others',
-  },
-];
+    {
+      'value': 'Medication',
+      'label': 'Medication',
+    },
+    {
+      'value': 'Food',
+      'label': 'Food',
+    },
+    {
+      'value': 'Transportation',
+      'label': 'Transportation',
+    },
+    {
+      'value': 'Groceries',
+      'label': 'Groceries',
+    },
+    {
+      'value': 'Utilities',
+      'label': 'Utilities',
+    },
+    {
+      'value': 'Others',
+      'label': 'Others',
+    },
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
-  
-  
-    void _changeIndex(int index) {
+
+  void _changeIndex(int index) {
     setState(() {
       _addIndex = index;
     });
   }
+
   String dropdownValue = 'Medication';
   bool _load = false;
   var LangList = ["kor", "eng", "deu", "chi_sim"];
@@ -125,7 +128,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool bDownloadtessFile = false;
   // "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FqCviW%2FbtqGWTUaYLo%2FwD3ZE6r3ARZqi4MkUbcGm0%2Fimg.png";
   var urlEditController = TextEditingController()
-  
     ..text = "https://tesseract.projectnaptha.com/img/eng_bw.png";
 
   Future<void> writeToFile(ByteData data, String path) {
@@ -133,97 +135,130 @@ class _MyHomePageState extends State<MyHomePage> {
     return new File(path).writeAsBytes(
         buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
+
   int _addIndex = 0;
   void runFilePiker() async {
     // android && ios only
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
-    selectedImage=File(pickedFile.path);
+    selectedImage = File(pickedFile.path);
     if (pickedFile != null) {
       _ocr(pickedFile.path);
     }
   }
+
   File selectedImage;
   void captureImage() async {
     // android && ios only
-    final pickedFile =
-        await ImagePicker().getImage(source: ImageSource.camera);
+    final imageFile = await ImagePicker().getImage(source: ImageSource.camera);
+
+    File pickedFile = await ImageCropper.cropImage(
+        sourcePath: imageFile.path,
+        aspectRatioPresets: [
+          CropAspectRatioPreset.square,
+          CropAspectRatioPreset.ratio3x2,
+          CropAspectRatioPreset.original,
+          CropAspectRatioPreset.ratio4x3,
+          CropAspectRatioPreset.ratio16x9
+        ],
+        androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: Colors.deepOrange,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false),
+        iosUiSettings: IOSUiSettings(
+          minimumAspectRatio: 1.0,
+        ));
     if (pickedFile != null) {
+      selectedImage = File(pickedFile.path);
       _ocr(pickedFile.path);
     }
     print(pickedFile);
   }
-static String BASE_URL = ''+Global.url+'/receipt';
-static String BASE_URL_UPLOAD = ''+Global.url+'/upload';
-uploadImage(id) async{
-    final request=http.MultipartRequest("POST",Uri.parse(BASE_URL_UPLOAD+'/'+id.toString()));
-    final headers={"Content-type":"multipart/form-data"};
-    request.fields['user']="test";
-    request.files.add(http.MultipartFile('image',selectedImage.readAsBytes().asStream(),selectedImage.lengthSync(),filename: selectedImage.path.split("/").last));
+
+  static String BASE_URL = '' + Global.url + '/receipt';
+  static String BASE_URL_UPLOAD = '' + Global.url + '/upload';
+  uploadImage(id) async {
+    final request = http.MultipartRequest(
+        "POST", Uri.parse(BASE_URL_UPLOAD + '/' + id.toString()));
+    final headers = {"Content-type": "multipart/form-data"};
+    request.fields['user'] = "test";
+    request.files.add(http.MultipartFile('image',
+        selectedImage.readAsBytes().asStream(), selectedImage.lengthSync(),
+        filename: selectedImage.path.split("/").last));
     request.headers.addAll(headers);
     final response = await request.send();
     http.Response res = await http.Response.fromStream(response);
     final resJson = jsonDecode(res.body);
-    var message=resJson['message'];
+    var message = resJson['message'];
     setState(() {
-        selectedImage=null;
+      selectedImage = null;
     });
-}
+  }
 
+  void notify(DialogType type, title, desc) {
+    AwesomeDialog(
+      context: context,
+      dialogType: type,
+      animType: AnimType.BOTTOMSLIDE,
+      title: title,
+      desc: desc,
+      btnOkOnPress: () {},
+    )..show();
+  }
 
-void notify(DialogType type , title, desc){
-  AwesomeDialog(
-            context: context,
-            dialogType:type,
-            animType: AnimType.BOTTOMSLIDE,
-            title: title,
-            desc: desc,
-            btnOkOnPress: () {},
-            )..show();
-}
-
-String _textMessage='';
-void addReceipt() async {
-  setState(() {
-    _load = true;
-  });
+  String _textMessage = '';
+  void addReceipt() async {
+    
+    if(_vendorName.text==null || _totalAmount.text==null || _vendorName.text=='' || _totalAmount.text=='') {
+        notify(DialogType.ERROR,'Field is required.','Please fill up the form.');
+        
+        return;
+    }
+    setState(() {
+      _load = true;
+    });
     final prefs = await SharedPreferences.getInstance();
     int _id = prefs.getInt("_id");
-    var params={
-      "id":_id,
-      "category_name":dropdownValue,
-      "vendor_name":_vendorName.text,
-      "total":_totalAmount.text
+    var params = {
+      "id": _id,
+      "category_name": dropdownValue,
+      "vendor_name": _vendorName.text,
+      "total": _totalAmount.text
     };
-    final response = await http.post(Uri.parse(BASE_URL+'/'+'1'),headers: {"Content-Type": "application/json"},body:json.encode(params));
+    final response = await http.post(Uri.parse(BASE_URL + '/' + '1'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(params));
     final data = json.decode(response.body);
-    print(data['id']);
+    print(data);
     uploadImage(data['id']);
-    notify(DialogType.SUCCES, 'Successfully added', 'You added a new receipt successfully');
+    
+    notify(DialogType.SUCCES, 'Successfully added',
+        'You added a new receipt successfully');
     setState(() {
-      dropdownValue='Others';
-      _vendorName.text='';
-      _totalAmount.text='';
+      dropdownValue = 'Others';
+      _vendorName.text = '';
+      _totalAmount.text = '';
       _load = false;
     });
-    
-    if("exceed"==data['status']){
-       AwesomeDialog(
-            context: context,
-            dialogType: DialogType.INFO,
-            animType: AnimType.BOTTOMSLIDE,
-            title: 'You already exceed the total set amount.',
-            desc: 'Please check your settings. Thank you !',
-            btnOkOnPress: () {},
-            )..show();
+
+    if ("exceed" == data['status']) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.INFO,
+        animType: AnimType.BOTTOMSLIDE,
+        title: 'You already exceed the total set amount.',
+        desc: 'Please check your settings. Thank you !',
+        btnOkOnPress: () {},
+      )..show();
     }
-    
- 
-}
+  }
+
   void _ocr(url) async {
-     setState(() {
-    _load = true;
-  });
+    setState(() {
+      _load = true;
+    });
     if (selectList.length <= 0) {
       print("Please select language");
       return;
@@ -233,80 +268,83 @@ void addReceipt() async {
 
     bload = true;
     setState(() {});
-   print("okay");
+    print("okay");
     _ocrText =
         await FlutterTesseractOcr.extractText(url, language: langs, args: {
       "preserve_interword_spaces": "0",
     });
     bload = false;
     setState(() {});
-   String BASE_URL = ''+Global.url+'/chat';
+    String BASE_URL = '' + Global.url + '/chat';
     var getVal = true;
     // print(_ocrText.split('\n'));
-   var text=_ocrText.split('\n');
-   _vendorName.text=text[0];
-   print(text);
+    var text = _ocrText.split('\n');
+    _vendorName.text = text[0];
+    print(text);
     text.forEach((item) {
-      if(getVal){
-        if(item.toLowerCase().contains('total')){
-        var val=text[text.indexOf(item)];
-        print(val.runtimeType==double);
-        print(val);
-        var _splittedAmount=val.split(' ');
-        _totalAmount.text=_splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
-        print(_totalAmount.text.replaceAll("[^\\d.]", ""));
-        getVal=false;
-      } 
-      else if(item.toLowerCase().contains('amount')){
-        var val=text[text.indexOf(item)];
-        var _splittedAmount=val.split(' ');
-        print(val);
-        _totalAmount.text=_splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
-        print(_totalAmount.text.replaceAll("[^\\d.]", ""));
-         getVal=false;
+      if (getVal) {
+        if (item.toLowerCase().contains('total')) {
+          var val = text[text.indexOf(item)];
+          print(val.runtimeType == double);
+          print(val);
+          var _splittedAmount = val.split(' ');
+          _totalAmount.text =
+              _splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
+          print(_totalAmount.text.replaceAll("[^\\d.]", ""));
+          getVal = false;
+        } else if (item.toLowerCase().contains('amount')) {
+          var val = text[text.indexOf(item)];
+          var _splittedAmount = val.split(' ');
+          print(val);
+          _totalAmount.text =
+              _splittedAmount.last.replaceAll(RegExp('[^0-9.0-9]'), '');
+          print(_totalAmount.text.replaceAll("[^\\d.]", ""));
+          getVal = false;
+        }
       }
-      }
-     });
-     final response = await http.post(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"},body:json.encode({"value":_ocrText}));
+    });
+    final response = await http.post(Uri.parse(BASE_URL),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"value": _ocrText}));
     final data = json.decode(response.body);
     setState(() {
-      dropdownValue=data['data'];
+      dropdownValue = data['data'];
       _load = false;
     });
   }
-  void convertMessage() async{
+
+  void convertMessage() async {
     var getVal = true;
-        var text=_message.split(' ');
-   _vendorName.text=text[0];
-   print(text);
+    var text = _message.split(' ');
+    _vendorName.text = text[0];
     text.forEach((item) {
-      if(getVal){
-        if(item.toLowerCase().contains('total')){
-        var val=text[text.indexOf(item)+1];
-        var _splittedAmount=val;
-        _totalAmount.text=_splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
-        print(_totalAmount.text.replaceAll("[^\\d.]", ""));
-        getVal=false;
-      } 
-      else if(item.toLowerCase().contains('amount')){
-        var val=text[text.indexOf(item)+1];
-        var _splittedAmount=val;
-        print(val);
-        _totalAmount.text=_splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
-        print(_totalAmount.text.replaceAll("[^\\d.]", ""));
-         getVal=false;
+      if (getVal) {
+        if (item.toLowerCase().contains('total')) {
+          var val = text[text.indexOf(item) + 1];
+          var _splittedAmount = val;
+          _totalAmount.text =
+              _splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
+          getVal = false;
+        } else if (item.toLowerCase().contains('amount')) {
+          var val = text[text.indexOf(item) + 1];
+          var _splittedAmount = val;
+          print(val);
+          _totalAmount.text =
+              _splittedAmount.replaceAll(RegExp('[^0-9.0-9]'), '');
+          getVal = false;
+        }
       }
-      }
-     });
-     final response = await http.post(Uri.parse(BASE_URL),headers: {"Content-Type": "application/json"},body:json.encode({"value":_ocrText}));
+    });
+    final response = await http.post(Uri.parse(BASE_URL),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"value": _ocrText}));
     final data = json.decode(response.body);
     setState(() {
-      dropdownValue=data['data'];
-      _addIndex=1;
-     
+      dropdownValue = data['data'];
+      _addIndex = 1;
     });
   }
-  
+
   void getPref() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -321,12 +359,14 @@ void addReceipt() async {
     initPlatformState();
     getPref();
   }
-    onMessage(SmsMessage message) async {
+
+  onMessage(SmsMessage message) async {
     setState(() {
       _message = message.body ?? "Error reading message body.";
     });
     convertMessage();
   }
+
   Future<void> initPlatformState() async {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // If the widget was removed from the tree while the asynchronous platform
@@ -342,387 +382,440 @@ void addReceipt() async {
 
     if (!mounted) return;
   }
-   onSendStatus(SendStatus status) {
+
+  onSendStatus(SendStatus status) {
     setState(() {
       _message = status == SendStatus.SENT ? "sent" : "delivered";
     });
   }
+
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
-        
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              child:Text(_email,style: TextStyle(color: Colors.white),),
+              child: Text(
+                _email,
+                style: TextStyle(color: Colors.white),
+              ),
               decoration: BoxDecoration(
                 color: Colors.purple,
-                
               ),
             ),
             ListTile(
-              trailing:  Icon(Icons.people),
-              title: const Text('Profile'),
+              trailing: Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: Profile(),
-                  ),
-                );
+                Get.toNamed('/profile');
               },
             ),
             Divider(),
             ListTile(
-              trailing:  Icon(Icons.logout),
+              trailing: Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
                 AwesomeDialog(
                     context: context,
-                    dialogType:DialogType.QUESTION,
+                    dialogType: DialogType.QUESTION,
                     animType: AnimType.BOTTOMSLIDE,
                     title: "Are you sure you want to logout ?",
-                    btnOkOnPress: (){
+                    btnOkOnPress: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      prefs.setBool('isLoggedIn', false);
                       Navigator.pop(context);
                       Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: Login(),
-                  ),
-                );
-                        
-                      // runApp(());
-                    
-                    },
-                    btnCancelOnPress: (){
+                        context,
+                        PageTransition(
+                          curve: Curves.linear,
+                          type: PageTransitionType.topToBottom,
+                          child: Login(),
+                        ),
+                      );
 
-                    }
-                    )..show();
-                      },
-              
+                      // runApp(());
+                    },
+                    btnCancelOnPress: () {})
+                  ..show();
+              },
             ),
           ],
         ),
       ),
       appBar: AppBar(
-        backgroundColor:Colors.purple,
+        backgroundColor: Colors.purple,
         title: Text(widget.title),
       ),
       body: SpinCircleBottomBarHolder(
-          bottomNavigationBar: SCBottomBarDetails(
-              circleColors: [Colors.white, Colors.orange, Colors.purple],
-              iconTheme: IconThemeData(color: Colors.black45),
-              activeIconTheme: IconThemeData(color: Colors.purple),
-              backgroundColor: Colors.white,
-              titleStyle: TextStyle(color: Colors.black45,fontSize: 12),
-              activeTitleStyle: TextStyle(color: Colors.black,fontSize: 12,fontWeight: FontWeight.bold),
-              actionButtonDetails: SCActionButtonDetails(
-                  color: Colors.purple,
-                  icon: Icon(
-                    Icons.expand_less,
-                    color: Colors.white,
-                  ),
-                  elevation: 2),
-              elevation: 2.0,
-              items: [
-                // Suggested count : 4
-                SCBottomBarItem(icon: Icons.receipt, title: "Receipts", onPressed: () {
+        bottomNavigationBar: SCBottomBarDetails(
+            circleColors: [Colors.white, Colors.orange, Colors.purple],
+            iconTheme: IconThemeData(color: Colors.black45),
+            activeIconTheme: IconThemeData(color: Colors.purple),
+            backgroundColor: Colors.white,
+            titleStyle: TextStyle(color: Colors.black45, fontSize: 12),
+            activeTitleStyle: TextStyle(
+                color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+            actionButtonDetails: SCActionButtonDetails(
+                color: Colors.purple,
+                icon: Icon(
+                  Icons.expand_less,
+                  color: Colors.white,
+                ),
+                elevation: 2),
+            elevation: 2.0,
+            items: [
+              // Suggested count : 4
+              SCBottomBarItem(
+                  icon: Icons.receipt,
+                  title: "Receipts",
+                  onPressed: () {
                     Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: receipt(),
-                  ),
-                );
-                }),
-                SCBottomBarItem(icon: Icons.bar_chart, title: "Analytics", onPressed: () {
-                  Navigator.push(
-                  context,
-                  PageTransition(
-                    curve: Curves.linear,
-                    type: PageTransitionType.topToBottom,
-                    child: analytics(),
-                  ),
-                );
-                }),
-              ],
-              circleItems: [
-                //Suggested Count: 3
-                SCItem(icon: Icon(Icons.photo_album), onPressed: () {
-                  runFilePiker();
-                  _addIndex=2;
-                }),
-                SCItem(icon: Icon(Icons.camera), onPressed: () {
-                 captureImage();
-                  _addIndex=2;
-                }),
-                SCItem(icon: Icon(Icons.add), onPressed: () {
-                  print("okayy");
-                  _changeIndex(1);
-                  _ocrText='';
-                }),
-              ],
-              bnbHeight: 80 // Suggested Height 80
-          ),
-          child: _addIndex==0 ? Container(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                textSize(_message, 20),
-                textSize("Select receipt procedure below.", 20.0),
-                CustomPaint(                    
-                  painter: MyPainter(),
-                ),
-                CustomPaint(                    
-                  painter: DrawCurveLeft(),
-                ),
-                CustomPaint(                    
-                  painter: DrawCurveRight(),
-                ),
-              ],
-            )
-          ): _addIndex!=1 ?  Stack(
-        children: [
-            Container(
-              padding: EdgeInsets.all(20),
-              child: Column(
-          children: [
-            textSize('Receipt', 25.0),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: _vendorName,
-                decoration: new InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color:Colors.black45 , width: 1.0),
-                    ),
-                    hintText: 'Enter Vendor',
-                ),
-            ),
-            ),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: _totalAmount,
-                decoration: new InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color:Colors.black45 , width: 1.0),
-                    ),
-                    hintText: 'Enter Amount',
-                ),
-            ),
-            ),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child:  DropdownButton<String>(
-                isExpanded: true,
-                value: dropdownValue,
-                icon: const Icon(Icons.arrow_downward),
-                iconSize: 24,
-                elevation: 16,
-                style: const TextStyle(color: Colors.black),
-                underline: Container(
-                  height: 2,
-                  color: Colors.black,
-                ),
-                onChanged: (String newValue) {
-                  setState(() {
-                    dropdownValue = newValue;
-                  });
-                },
-                items: <String>['Medication', 'Education', 'Food', 'Transportation','Utilities','Store','Others']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              )
-            ),
-           Container(
-             padding: EdgeInsets.only(top: 20),
-             child: Column(
-               children: [
-                 new SizedBox(
-                    width: 350.0,
-                    height: 50.0,
-                    child:ElevatedButton(
-                    onPressed: () {
-                     addReceipt();
-                    //  uploadImage();
-                    },
-                    child: Text('Save'),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // <-- Radius
+                      context,
+                      PageTransition(
+                        curve: Curves.linear,
+                        type: PageTransitionType.topToBottom,
+                        child: receipt(),
                       ),
-                    ),
-                  )
-                 ),
-                 Padding(padding: EdgeInsets.only(bottom: 15)),
-                 new SizedBox(
-                    width: 350.0,
-                    height: 50.0,
-                    child:ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Cancel',style: TextStyle(color: Colors.black),),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // <-- Radius
+                    );
+                  }),
+              SCBottomBarItem(
+                  icon: Icons.bar_chart,
+                  title: "Analytics",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        curve: Curves.linear,
+                        type: PageTransitionType.topToBottom,
+                        child: analytics(),
                       ),
-                    ),
-                  )
-                 )
-               ],
-             )
-           ),
-           _load ? Container(
-                    color: Colors.white10,
-                    width: 70.0,
-                    height: 70.0,
-                    child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
-                  ) : Text('')
-          ],
-        ), 
-            ), 
-          Container(
-            color: Colors.black26,
-            child: bDownloadtessFile
-                ? Center(
-                    child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    );
+                  }),
+            ],
+            circleItems: [
+              //Suggested Count: 3
+              SCItem(
+                  icon: Icon(Icons.photo_album),
+                  onPressed: () {
+                    runFilePiker();
+                    _addIndex = 2;
+                  }),
+              SCItem(
+                  icon: Icon(Icons.camera),
+                  onPressed: () {
+                    captureImage();
+                    _addIndex = 2;
+                  }),
+              SCItem(
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    print("okayy");
+                    _changeIndex(1);
+                    _ocrText = '';
+                  }),
+            ],
+            bnbHeight: 80 // Suggested Height 80
+            ),
+        child: _addIndex == 0
+            ? Container(
+                child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  textSize(_message, 20),
+                  textSize("Select receipt procedure below.", 20.0),
+                  CustomPaint(
+                    painter: MyPainter(),
+                  ),
+                  CustomPaint(
+                    painter: DrawCurveLeft(),
+                  ),
+                  CustomPaint(
+                    painter: DrawCurveRight(),
+                  ),
+                ],
+              ))
+            : _addIndex != 1
+                ? Stack(
                     children: [
-                      CircularProgressIndicator(),
-                      Text('download Trained language files')
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            textSize('Receipt', 25.0),
+                            Container(
+                              padding: EdgeInsets.only(top: 10),
+                              child: TextField(
+                                controller: _vendorName,
+                                decoration: new InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black, width: 1.0),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black45, width: 1.0),
+                                  ),
+                                  hintText: 'Enter Vendor',
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(top: 10),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                controller: _totalAmount,
+                                decoration: new InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black, width: 1.0),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black45, width: 1.0),
+                                  ),
+                                  hintText: 'Enter Amount',
+                                ),
+                              ),
+                            ),
+                            Container(
+                                padding: EdgeInsets.only(top: 10),
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: dropdownValue,
+                                  icon: const Icon(Icons.arrow_downward),
+                                  iconSize: 24,
+                                  elevation: 16,
+                                  style: const TextStyle(color: Colors.black),
+                                  underline: Container(
+                                    height: 2,
+                                    color: Colors.black,
+                                  ),
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      dropdownValue = newValue;
+                                    });
+                                  },
+                                  items: <String>[
+                                    'Medication',
+                                    'Education',
+                                    'Food',
+                                    'Transportation',
+                                    'Utilities',
+                                    'Store',
+                                    'Others'
+                                  ].map<DropdownMenuItem<String>>(
+                                      (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                )),
+                            Container(
+                                padding: EdgeInsets.only(top: 20),
+                                child: Column(
+                                  children: [
+                                    new SizedBox(
+                                        width: 350.0,
+                                        height: 50.0,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            addReceipt();
+                                            //  uploadImage();
+                                          },
+                                          child: Text('Save'),
+                                          style: ElevatedButton.styleFrom(
+                                            primary: Colors.purple,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      12), // <-- Radius
+                                            ),
+                                          ),
+                                        )),
+                                    Padding(
+                                        padding: EdgeInsets.only(bottom: 15)),
+                                    new SizedBox(
+                                        width: 350.0,
+                                        height: 50.0,
+                                        child: ElevatedButton(
+                                          onPressed: () {},
+                                          child: Text(
+                                            'Cancel',
+                                            style:
+                                                TextStyle(color: Colors.black),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            primary: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      12), // <-- Radius
+                                            ),
+                                          ),
+                                        ))
+                                  ],
+                                )),
+                            _load
+                                ? Container(
+                                    color: Colors.white10,
+                                    width: 70.0,
+                                    height: 70.0,
+                                    child: new Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: new Center(
+                                            child:
+                                                new CircularProgressIndicator())),
+                                  )
+                                : Text('')
+                          ],
+                        ),
+                      ),
+                      Container(
+                        color: Colors.black26,
+                        child: bDownloadtessFile
+                            ? Center(
+                                child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  Text('download Trained language files')
+                                ],
+                              ))
+                            : SizedBox(),
+                      )
                     ],
-                  ))
-                : SizedBox(),
-          )
-        ],
-      ) : Container(
-        padding: EdgeInsets.all(30.0),
-        child: Column(
-          children: [
-            textSize('Receipt', 25.0),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: _vendorName,
-                decoration: new InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color:Colors.black45 , width: 1.0),
-                    ),
-                    hintText: 'Enter Vendor',
-                ),
-            ),
-            ),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: _totalAmount,
-                decoration: new InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color:Colors.black45 , width: 1.0),
-                    ),
-                    hintText: 'Enter Amount',
-                ),
-            ),
-            ),
-            Container(
-              padding: EdgeInsets.only(top: 10),
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: dropdownValue,
-                icon: const Icon(Icons.arrow_downward),
-                iconSize: 24,
-                elevation: 16,
-                style: const TextStyle(color: Colors.black),
-                underline: Container(
-                  height: 2,
-                  color: Colors.black,
-                ),
-                onChanged: (String newValue) {
-                  setState(() {
-                    dropdownValue = newValue;
-                  });
-                },
-                items: <String>['Medication', 'Education', 'Food', 'Transportation','Utilities','Store','Others']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              )
-            ),
-           Container(
-             padding: EdgeInsets.only(top: 20),
-             child: Column(
-               children: [
-                 new SizedBox(
-                    width: 350.0,
-                    height: 50.0,
-                    child:ElevatedButton(
-                    onPressed: () {
-                      addReceipt();
-                    },
-                    child: Text('Save'),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // <-- Radius
-                      ),
-                    ),
                   )
-                 ),
-                 Padding(padding: EdgeInsets.only(bottom: 15)),
-                 new SizedBox(
-                    width: 350.0,
-                    height: 50.0,
-                    child:ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Cancel',style: TextStyle(color: Colors.black),),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // <-- Radius
-                      ),
+                : Container(
+                    padding: EdgeInsets.all(30.0),
+                    child: Column(
+                      children: [
+                        textSize('Receipt', 25.0),
+                        Container(
+                          padding: EdgeInsets.only(top: 10),
+                          child: TextField(
+                            controller: _vendorName,
+                            decoration: new InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.black, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors.black45, width: 1.0),
+                              ),
+                              hintText: 'Enter Vendor',
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(top: 10),
+                          child: TextField(
+                            keyboardType: TextInputType.number,
+                            controller: _totalAmount,
+                            decoration: new InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.black, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors.black45, width: 1.0),
+                              ),
+                              hintText: 'Enter Amount',
+                            ),
+                          ),
+                        ),
+                        Container(
+                            padding: EdgeInsets.only(top: 10),
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: dropdownValue,
+                              icon: const Icon(Icons.arrow_downward),
+                              iconSize: 24,
+                              elevation: 16,
+                              style: const TextStyle(color: Colors.black),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.black,
+                              ),
+                              onChanged: (String newValue) {
+                                setState(() {
+                                  dropdownValue = newValue;
+                                });
+                              },
+                              items: <String>[
+                                'Medication',
+                                'Education',
+                                'Food',
+                                'Transportation',
+                                'Utilities',
+                                'Store',
+                                'Others'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            )),
+                        Container(
+                            padding: EdgeInsets.only(top: 20),
+                            child: Column(
+                              children: [
+                                new SizedBox(
+                                    width: 350.0,
+                                    height: 50.0,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        addReceipt();
+                                      },
+                                      child: Text('Save'),
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Colors.purple,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              12), // <-- Radius
+                                        ),
+                                      ),
+                                    )),
+                                Padding(padding: EdgeInsets.only(bottom: 15)),
+                                new SizedBox(
+                                    width: 350.0,
+                                    height: 50.0,
+                                    child: ElevatedButton(
+                                      onPressed: () {},
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              12), // <-- Radius
+                                        ),
+                                      ),
+                                    )),
+                                _load
+                                    ? Container(
+                                        color: Colors.white10,
+                                        width: 70.0,
+                                        height: 70.0,
+                                        child: new Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: new Center(
+                                                child:
+                                                    new CircularProgressIndicator())),
+                                      )
+                                    : Text('')
+                              ],
+                            ))
+                      ],
                     ),
-                  )
-                 ),
-                 _load ? Container(
-                    color: Colors.white10,
-                    width: 70.0,
-                    height: 70.0,
-                    child: new Padding(padding: const EdgeInsets.all(5.0),child: new Center(child: new CircularProgressIndicator())),
-                  ) : Text('')
-               ],
-             )
-           )
-          ],
-        ),
+                  ),
       ),
-        ),
 
       // floatingActionButton: kIsWeb
       //     ? Container()
@@ -737,4 +830,3 @@ void addReceipt() async {
     );
   }
 }
-
