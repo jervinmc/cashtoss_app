@@ -22,11 +22,16 @@ class _ProfileState extends State<Profile> {
   TextEditingController _password = new TextEditingController();
 
   void reset() async{
-    
+    setState(() {
+      _load=true;
+    });
     final response = await http.delete(Uri.parse(BASE_URL + '/' + _id.toString()),
         headers: {"Content-Type": "application/json"});
-
-  }
+    setState(() {
+      _load=false;
+    });
+    notify(DialogType.SUCCES, 'Successfully Reset', 'Your data has already reset.');
+  } 
   void notify(DialogType type, title, desc) {
     AwesomeDialog(
       context: context,
@@ -52,7 +57,7 @@ class _ProfileState extends State<Profile> {
     setState(() {
       _load = true;
     });
-    final response = await http.put(Uri.parse(BASE_URL + '/' + _id.toString()),
+    final response = await http.put(Uri.parse(Global.url + '/users/' + _id.toString()),
         headers: {"Content-Type": "application/json"},
         body: json.encode(params));
     String jsonsDataString = response.body.toString();

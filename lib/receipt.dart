@@ -51,7 +51,7 @@ class _receiptState extends State<receipt> {
                   child: InkWell(
                     splashColor: Colors.purple.withAlpha(30),
                     onTap: () {
-                   Get.toNamed('/receiptList',arguments: 'Store');
+                   Get.toNamed('/receiptList',arguments: 'Groceries');
                     },
                     child: 
                 Column(
@@ -59,7 +59,7 @@ class _receiptState extends State<receipt> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                       Icon(Icons.store,size: 75,color: Colors.purple,),
-                      Text('Store',style: TextStyle(color: Colors.black87),)
+                      Text('Groceries',style: TextStyle(color: Colors.black87),)
                   ],
                 )
               )

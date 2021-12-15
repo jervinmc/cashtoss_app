@@ -51,7 +51,14 @@ class _ResetPasswordState extends State<ResetPassword> {
       setState(() {
          _load=false;
       });
-      notify(DialogType.SUCCES, 'Successful !', 'You may now check your new password on your email account.');
+      String jsonsDataString = response.body.toString();
+      final _data = jsonDecode(jsonsDataString);
+      if(_data['status']=='invalid'){
+        notify(DialogType.ERROR, 'Not Registered', 'Please register your account first.');
+      }
+      else{
+        notify(DialogType.SUCCES, 'Successful !', 'You may now check your new password on your email account.');
+      }
      
   }
   TextEditingController _email = new TextEditingController();

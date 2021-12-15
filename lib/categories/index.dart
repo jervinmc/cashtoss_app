@@ -87,7 +87,7 @@ class _receiptListState extends State<receiptList> {
                         curve: Curves.linear,
                         type: PageTransitionType.topToBottom,
                         child: ReceiptDetails(data[index]['image'],
-                            data[index]['total'], data[index]['vendor_name']),
+                            data[index]['total'], data[index]['vendor_name'],data[index]['id']),
                       ),
                     );
                   },

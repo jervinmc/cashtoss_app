@@ -4,6 +4,7 @@ import 'package:flutter_mobile_vision/flutter_mobile_vision.dart';
 import 'package:e_expense/utils.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_tesseract_ocr/flutter_tesseract_ocr.dart';
 import 'dart:async';
@@ -70,6 +71,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  DateTime selectedDate = DateTime.now();
+  var myFormat = DateFormat('yyyy-MM-dd');
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        _date.text = myFormat.format(picked).toString();
+      });
+  }
+
   String _message = "";
   final telephony = Telephony.instance;
   String _ocrText = '';
@@ -79,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _vendorName = new TextEditingController();
   TextEditingController _categoryName = new TextEditingController();
   TextEditingController _totalAmount = new TextEditingController();
+  TextEditingController _date = new TextEditingController();
   final List<Map<String, dynamic>> _items = [
     {
       'value': 'Medication',
@@ -114,6 +130,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _changeIndex(int index) {
     setState(() {
+      selectedImage = null;
+      _vendorName.text = '';
+      _date.text = '';
+      _totalAmount.text = '';
       _addIndex = index;
     });
   }
@@ -139,8 +159,26 @@ class _MyHomePageState extends State<MyHomePage> {
   int _addIndex = 0;
   void runFilePiker() async {
     // android && ios only
-    final pickedFile =
-        await ImagePicker().getImage(source: ImageSource.gallery);
+    final imageFile = await ImagePicker().getImage(source: ImageSource.gallery);
+
+    File pickedFile = await ImageCropper.cropImage(
+        sourcePath: imageFile.path,
+        aspectRatioPresets: [
+          CropAspectRatioPreset.square,
+          CropAspectRatioPreset.ratio3x2,
+          CropAspectRatioPreset.original,
+          CropAspectRatioPreset.ratio4x3,
+          CropAspectRatioPreset.ratio16x9
+        ],
+        androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: Colors.deepOrange,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false),
+        iosUiSettings: IOSUiSettings(
+          minimumAspectRatio: 1.0,
+        ));
     selectedImage = File(pickedFile.path);
     if (pickedFile != null) {
       _ocr(pickedFile.path);
@@ -208,13 +246,36 @@ class _MyHomePageState extends State<MyHomePage> {
     )..show();
   }
 
+  String toOriginalFormatString(DateTime dateTime) {
+    final m = dateTime.month.toString().padLeft(2, '0');
+    final d = dateTime.day.toString().padLeft(2, '0');
+    final y = dateTime.year.toString().padLeft(4, '0');
+    return "$m$d$y";
+  }
+
   String _textMessage = '';
   void addReceipt() async {
-    
-    if(_vendorName.text==null || _totalAmount.text==null || _vendorName.text=='' || _totalAmount.text=='') {
-        notify(DialogType.ERROR,'Field is required.','Please fill up the form.');
-        
-        return;
+    try {
+      final date = DateTime.parse(_date.text);
+      final originalFormatString = toOriginalFormatString(date);
+    } catch (e) {
+      notify(DialogType.ERROR, 'Invalid Date',
+          'Please make sure your amount format.');
+      return;
+    }
+    if (double.tryParse(_totalAmount.text) == null) {
+      notify(DialogType.ERROR, 'Invalid Input',
+          'Please make sure your amount format.');
+      return;
+    }
+    if (_vendorName.text == null ||
+        _totalAmount.text == null ||
+        _vendorName.text == '' ||
+        _totalAmount.text == '') {
+      notify(
+          DialogType.ERROR, 'Field is required.', 'Please fill up the form.');
+
+      return;
     }
     setState(() {
       _load = true;
@@ -222,6 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final prefs = await SharedPreferences.getInstance();
     int _id = prefs.getInt("_id");
     var params = {
+      "date": _date.text,
       "id": _id,
       "category_name": dropdownValue,
       "vendor_name": _vendorName.text,
@@ -233,7 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final data = json.decode(response.body);
     print(data);
     uploadImage(data['id']);
-    
+
     notify(DialogType.SUCCES, 'Successfully added',
         'You added a new receipt successfully');
     setState(() {
@@ -241,6 +303,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _vendorName.text = '';
       _totalAmount.text = '';
       _load = false;
+      _date.text = '';
+      selectedImage = null;
     });
 
     if ("exceed" == data['status']) {
@@ -260,12 +324,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _load = true;
     });
     if (selectList.length <= 0) {
-      print("Please select language");
       return;
     }
     path = url;
     var langs = selectList.join("+");
-
     bload = true;
     setState(() {});
     print("okay");
@@ -301,6 +363,19 @@ class _MyHomePageState extends State<MyHomePage> {
           print(_totalAmount.text.replaceAll("[^\\d.]", ""));
           getVal = false;
         }
+         else if (item.toLowerCase().contains('date')) {
+          var val = text[text.indexOf(item)];
+          var _splittedDate = val.split(' ');
+          if(_splittedDate.length>0){
+            _splittedDate.forEach((itemDate) {
+                if(item.toLowerCase().contains('date')){
+                  _date.text=_splittedDate[_splittedDate.indexOf(itemDate)];
+                }
+            });
+          
+          }
+          
+        }
       }
     });
     final response = await http.post(Uri.parse(BASE_URL),
@@ -335,12 +410,12 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
     });
-    final response = await http.post(Uri.parse(BASE_URL),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"value": _ocrText}));
-    final data = json.decode(response.body);
+    // final response = await http.post(Uri.parse(BASE_URL),
+    //     headers: {"Content-Type": "application/json"},
+    //     body: json.encode({"value": _ocrText}));
+    // final data = json.decode(response.body);
     setState(() {
-      dropdownValue = data['data'];
+      dropdownValue = 'Utilities';
       _addIndex = 1;
     });
   }
@@ -349,6 +424,9 @@ class _MyHomePageState extends State<MyHomePage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _email = prefs.getString("_email");
+      if (prefs.getBool('isExceeded80'))
+        notify(DialogType.WARNING, 'Purchased Items Exceeding 80 percent',
+            'You notified this because you purchased 80 percent of your set price threshold.');
       print(_email);
     });
   }
@@ -368,11 +446,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> initPlatformState() async {
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-
     final bool result = await telephony.requestPhoneAndSmsPermissions;
 
     if (result != null && result) {
@@ -522,7 +595,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  textSize(_message, 20),
                   textSize("Select receipt procedure below.", 20.0),
                   CustomPaint(
                     painter: MyPainter(),
@@ -542,12 +614,24 @@ class _MyHomePageState extends State<MyHomePage> {
                         padding: EdgeInsets.all(20),
                         child: Column(
                           children: [
+                            _load
+                                ? Container(
+                                    color: Colors.white10,
+                                    width: 70.0,
+                                    height: 70.0,
+                                    child: new Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: new Center(
+                                            child:
+                                                const CircularProgressIndicator())),
+                                  )
+                                : Text(''),
                             textSize('Receipt', 25.0),
                             Container(
                               padding: EdgeInsets.only(top: 10),
                               child: TextField(
                                 controller: _vendorName,
-                                decoration: new InputDecoration(
+                                decoration: const InputDecoration(
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color: Colors.black, width: 1.0),
@@ -565,7 +649,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               child: TextField(
                                 keyboardType: TextInputType.number,
                                 controller: _totalAmount,
-                                decoration: new InputDecoration(
+                                decoration: const InputDecoration(
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color: Colors.black, width: 1.0),
@@ -576,6 +660,38 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                   hintText: 'Enter Amount',
                                 ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(top: 10),
+                              child: TextField(
+                                readOnly: true,
+                                maxLength: 10,
+                                keyboardType: TextInputType.number,
+                                controller: _date,
+                                decoration: const InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black, width: 1.0),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black45, width: 1.0),
+                                  ),
+                                  hintText: 'Date ex: yyyy-MM-dd',
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  // ignore: deprecated_member_use
+                                  RaisedButton(
+                                    onPressed: () => _selectDate(context),
+                                    child: Text('Select date'),
+                                  ),
+                                ],
                               ),
                             ),
                             Container(
@@ -602,7 +718,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     'Food',
                                     'Transportation',
                                     'Utilities',
-                                    'Store',
+                                    'Groceries',
                                     'Others'
                                   ].map<DropdownMenuItem<String>>(
                                       (String value) {
@@ -640,7 +756,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                         width: 350.0,
                                         height: 50.0,
                                         child: ElevatedButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            setState(() {
+                                              selectedImage = null;
+                                              _vendorName.text = '';
+                                              _totalAmount.text = '';
+                                              _date.text = '';
+                                            });
+                                          },
                                           child: Text(
                                             'Cancel',
                                             style:
@@ -657,18 +780,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                         ))
                                   ],
                                 )),
-                            _load
-                                ? Container(
-                                    color: Colors.white10,
-                                    width: 70.0,
-                                    height: 70.0,
-                                    child: new Padding(
-                                        padding: const EdgeInsets.all(5.0),
-                                        child: new Center(
-                                            child:
-                                                new CircularProgressIndicator())),
-                                  )
-                                : Text('')
                           ],
                         ),
                       ),
@@ -691,6 +802,18 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: EdgeInsets.all(30.0),
                     child: Column(
                       children: [
+                        _load
+                            ? Container(
+                                color: Colors.white10,
+                                width: 70.0,
+                                height: 70.0,
+                                child: new Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: new Center(
+                                        child:
+                                            new CircularProgressIndicator())),
+                              )
+                            : Text(''),
                         textSize('Receipt', 25.0),
                         Container(
                           padding: EdgeInsets.only(top: 10),
@@ -728,6 +851,38 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         Container(
+                          padding: EdgeInsets.only(top: 10),
+                          child: TextField(
+                            readOnly: true,
+                            maxLength: 10,
+                            keyboardType: TextInputType.number,
+                            controller: _date,
+                            decoration: new InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.black, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors.black45, width: 1.0),
+                              ),
+                              hintText: 'Date ex: YYYY-MM-DD',
+                            ),
+                          ),
+                        ),    
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              // ignore: deprecated_member_use
+                              RaisedButton(
+                                onPressed: () => _selectDate(context),
+                                child: Text('Select date'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
                             padding: EdgeInsets.only(top: 10),
                             child: DropdownButton<String>(
                               isExpanded: true,
@@ -751,7 +906,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 'Food',
                                 'Transportation',
                                 'Utilities',
-                                'Store',
+                                'Groceries',
                                 'Others'
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
@@ -785,7 +940,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                     width: 350.0,
                                     height: 50.0,
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        setState(() {
+                                          selectedImage = null;
+                                          _vendorName.text = '';
+                                          _totalAmount.text = '';
+                                          _date.text = '';
+                                        });
+                                      },
                                       child: Text(
                                         'Cancel',
                                         style: TextStyle(color: Colors.black),

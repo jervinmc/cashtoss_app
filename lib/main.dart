@@ -2,6 +2,7 @@ import 'package:e_expense/categories/index.dart';
 import 'package:e_expense/home.dart';
 import 'package:e_expense/login.dart';
 import 'package:e_expense/profile/index.dart';
+import 'package:e_expense/receipt.dart';
 import 'package:e_expense/reset_password/views/reset_password.dart';
 import 'package:e_expense/signup/index.dart';
 import 'package:e_expense/starting/views/starting.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/profile", page:()=>Profile()),
         GetPage(name: "/resetPassword", page:()=>ResetPassword()),
         GetPage(name: "/receiptList", page:()=>receiptList()),
+        GetPage(name: "/receipt", page:()=>receipt()),
         // GetPage(name: "/products", page:()=>Products()),
         // GetPage(name: "/cart", page:()=>Cart()),
         // GetPage(name: "/favorites", page:()=>Favorites()),

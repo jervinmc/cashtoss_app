@@ -64,13 +64,24 @@ class _LoginState extends State<Login> {
       if(_data['status']==201){
         prefs.setInt("_id",_data['id']);
         prefs.setString("_email",_data['email']);
-        prefs.setBool("isLoggedIn",true);
+        prefs.setBool("isLoggedIn", true);
+        final response = await http.get(Uri.parse(Global.url+'/threshold/${_data['id']}'),headers: {"Content-Type": "application/json"});
+        String jsonsDataString = response.body.toString();
+        var res=  jsonDecode(jsonsDataString);
+        print(res['status']);
+        prefs.setBool("isExceeded80", res['status']);
+
         setState(() {
           _load=false;
         });
         Navigator.pop(context);
-       Get.toNamed('/home');
-        // runApp(Home());
+      //  Get.toNamed('/home');
+      Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {
+                return Home();
+              }));
+        //  runApp(Home());
       }
       else{
         notify(DialogType.ERROR, 'Wrong Credentials', "Please try again.");

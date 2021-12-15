@@ -12,11 +12,11 @@ class analytics extends StatefulWidget {
   _analyticsState createState() => _analyticsState();
 }
   bool _load = true;
-  int _totalSetAmount=0;
+  double _totalSetAmount=0;
   bool isEdit=false;
   double _percent = 0;
   double _percentLabel=0;
-  int _currentAmount=0;
+  double _currentAmount=0;
   int _id = 0;
 class _analyticsState extends State<analytics> {
   static String BASE_URL = ''+Global.url+'/settings';
@@ -24,11 +24,14 @@ class _analyticsState extends State<analytics> {
     Future<String> getData() async {
       final prefs = await SharedPreferences.getInstance();
     int _id = prefs.getInt("_id");
-      print("okay");
+ 
 
    final response = await http.get(Uri.parse(BASE_URL+'/'+_id.toString()),headers: {"Content-Type": "application/json"});
   var data=json.decode(response.body);
+  print("okay");
   _totalSetAmount = data;
+  print(_totalSetAmount);
+  print(":mnot");
   setState(() {
   });
   }
@@ -38,11 +41,9 @@ class _analyticsState extends State<analytics> {
    final response = await http.get(Uri.parse(BASE_URL_RECEIPT+'/'+_id.toString()),headers: {"Content-Type": "application/json"});
    var data=json.decode(response.body);
   setState(() {
-  
     _load=false;
-    print(data);
-    
-    dataMap={"Groceries":data['Groceries'],"Medication":data['Medication'],"Others":data['Others'],"Food":data['Food']};
+    dataMap={"Medication":data['Medication'],"Others":data['Others'],"Food":data['Food'],
+    "Groceries":data['Groceries'],"Education":data["Education"],"Transportation":data['Transportation'],"Utilities":data["Utilities"]};
     if(data['total']!=null){
           _currentAmount=data['total'];
         if(data['total']/_totalSetAmount>1.0){
@@ -63,12 +64,13 @@ class _analyticsState extends State<analytics> {
 
   TextEditingController _totalAmount= new TextEditingController();
   Map<String, double> dataMap = {
-    "Medication": 5,
-    "Store": 3,
-    "Education": 2,
-    "Food": 2,
-    "Transportation": 2,
-    "Others": 2,
+    "Medication": 0,
+    "Groceries": 0,
+    "Education": 0,
+    "Food": 0,
+    "Transportation": 0,
+    "Others": 0,
+    "Utilities":0
   };
     void saveAmount() async {
      final prefs = await SharedPreferences.getInstance();
@@ -107,7 +109,7 @@ class _analyticsState extends State<analytics> {
               animationDuration: Duration(milliseconds: 800),
               chartLegendSpacing: 32,
               chartRadius: MediaQuery.of(context).size.width / 3.2,
-              colorList: [Colors.black45,Colors.blue,Colors.red,Colors.pink],
+              colorList: [Colors.black45,Colors.blue,Colors.red,Colors.pink,Colors.green,Colors.orange,Colors.yellow],
               initialAngleInDegree: 0,
               chartType: ChartType.ring,
               ringStrokeWidth: 32,
@@ -153,7 +155,7 @@ class _analyticsState extends State<analytics> {
                   suffixIcon: IconButton(onPressed: (){
                     setState(() {
                       isEdit=false;
-                      _totalSetAmount=int.parse(_totalAmount.text);
+                      _totalSetAmount=double.parse(_totalAmount.text);
                     });
                     saveAmount();
                   }, icon: Icon(Icons.save)),
