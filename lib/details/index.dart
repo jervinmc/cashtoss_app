@@ -38,9 +38,7 @@ class _ReceiptDetailsState extends State<ReceiptDetails> {
           children: [
             textSize(_vendorName, 30.0),
             textSize(_totalAmount.toString(), 20.0),
-            (_image == 'https://cashtosspublic.s3.us-east-2.amazonaws.com/None')
-                ? Text('No Image Found')
-                : Image.network(
+         Image.network(
                     _image,
                     height: 400,
                   ),

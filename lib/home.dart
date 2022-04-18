@@ -43,7 +43,7 @@ import 'package:telephony/telephony.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'profile/index.dart';
 import 'package:image_cropper/image_cropper.dart';
-
+import 'package:csv/csv.dart';
 onBackgroundMessage(SmsMessage message) {
   debugPrint("onBackgroundMessage called");
 }
@@ -306,7 +306,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _date.text = '';
       selectedImage = null;
     });
-
     if ("exceed" == data['status']) {
       AwesomeDialog(
         context: context,
@@ -425,7 +424,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _email = prefs.getString("_email");
       if (prefs.getBool('isExceeded80'))
-        notify(DialogType.WARNING, 'Purchased Items Exceeding 80 percent',
+        notify(DialogType.WARNING, 'Purchased Items Exceeding 80 percent for utilities.',
             'You notified this because you purchased 80 percent of your set price threshold.');
       print(_email);
     });
@@ -595,7 +594,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  textSize("Select receipt procedure below.", 20.0),
+                  textSize("Capture expense below.", 20.0),
                   CustomPaint(
                     painter: MyPainter(),
                   ),

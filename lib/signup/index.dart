@@ -50,6 +50,10 @@ class _SignUpState extends State<SignUp> {
         
         return;
     }
+    if(_password.text.length<9){
+      notify(DialogType.ERROR,'Password must be at least 8 characters.','');
+      return ;
+    }
       var params = {
         "email":_email.text,
         "password":_password.text

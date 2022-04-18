@@ -32,19 +32,25 @@ dependencies:
   cupertino_icons: ^1.0.1
   flutter_tesseract_ocr: ^0.3.0
   image: ^3.0.8
+  pdf: ^3.7.3
   image_picker: ^0.8.4+2
   exif: ^3.0.0
   telephony: ^0.1.4
   intl: ^0.17.0
   http:
+  syncfusion_flutter_datepicker: ^19.4.56
   spincircle_bottom_bar: ^2.0.0
   pie_chart: ^5.0.1
+  open_file: ^3.1.0
   select_form_field: "^1.0.0"
   awesome_dialog: ^2.1.1
   percent_indicator: ^3.4.0
   shared_preferences: any
   image_capture_field: ^0.2.4
   image_cropper: ^1.4.1
+  path_provider: ^2.0.9
+  csv: ^5.0.1
+  
   get: ^4.3.8
 dev_dependencies:
   flutter_test:
@@ -82,11 +88,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+  fonts:
+    - family: OpenSans
+      fonts:
+        - asset: assets/OpenSans.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:

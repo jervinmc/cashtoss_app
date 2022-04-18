@@ -20,6 +20,9 @@ class _ProfileState extends State<Profile> {
   int _id = 0;
   TextEditingController _email = new TextEditingController();
   TextEditingController _password = new TextEditingController();
+  TextEditingController _medication = new TextEditingController();
+  TextEditingController _utilities = new TextEditingController();
+  TextEditingController _transportation = new TextEditingController();
 
   void reset() async{
     setState(() {
@@ -52,6 +55,9 @@ class _ProfileState extends State<Profile> {
     var params = {
       "email": _email.text,
       "password": _password.text,
+      "utilities":_utilities.text,
+      "medication":_medication.text,
+      "transportation":_transportation.text,
       "id": prefs.getInt('_id')
     };
     setState(() {
@@ -132,6 +138,57 @@ class _ProfileState extends State<Profile> {
                         filled: true,
                         hintStyle: TextStyle(color: Colors.grey[800]),
                         hintText: "Password",
+                        fillColor: Colors.white70),
+                  )),
+                  textSize('Threshold Utilities', 17),
+                  Container(
+                  height: 60,
+                  padding: EdgeInsets.only(top: 0),
+                  child: TextField(
+                    obscureText: false,
+                    controller: _utilities,
+                    decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(8.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        filled: true,
+                        hintStyle: TextStyle(color: Colors.grey[800]),
+                        hintText: "Threshold Utilities",
+                        fillColor: Colors.white70),
+                  )),
+                  textSize('Threshold Medication', 17),
+                  Container(
+                  height: 60,
+                  padding: EdgeInsets.only(top: 0),
+                  child: TextField(
+                    obscureText: false,
+                    controller: _medication,
+                    decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(8.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        filled: true,
+                        hintStyle: TextStyle(color: Colors.grey[800]),
+                        hintText: "Threshold Medication",
+                        fillColor: Colors.white70),
+                  )),
+                  textSize('Threshold Transportation', 17),
+                  Container(
+                  height: 60,
+                  padding: EdgeInsets.only(top: 0),
+                  child: TextField(
+                    obscureText: false,
+                    controller: _transportation,
+                    decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(8.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        filled: true,
+                        hintStyle: TextStyle(color: Colors.grey[800]),
+                        hintText: "Threshold Transportation",
                         fillColor: Colors.white70),
                   )),
               textSize('Data', 17),
